@@ -1,3 +1,9 @@
+debug: false
+server:
+  port: 3000
 spring:
   thymeleaf:
     cache: false
+  resources:
+    cache:
+      period: 0

@@ -137,6 +137,7 @@
         <div class="input_outer">
             <span class="u_user"></span>
             <input id="username" name="username" class="text" type="text" placeholder="Username">
+            <div id="error-msg"></div>
         </div>
         <div class="mb2">
             <a class="act-but submit" onclick="login()">Login</a>
@@ -145,25 +146,40 @@
 </div>
 
 <script>
-
+    var inputElem = document.getElementById('username');
     /**
      * Login
      */
     function login() {
-        // TODO: complete the login function
+        var username = inputElem.value.trim();
+        if (!username.match(/^[\w\d]+$/)) {
+            document.getElementById('error-msg').innerText = 'Allowed characters: A-Z, a-z, 0-9';
+            return;
+        }
+        inputElem.disabled = true;
+        $.get('/json/validate/' + username, function(data, status) {
+            if (status === 'success' && data.valid) {
+                window.location.href = '/chat/' + username;
+            }
+            else {
+                inputElem.disabled = false;
+                document.getElementById('error-msg').innerText = 'Username is already in use';
+            }
+        });
     }
 
     /**
      * Enter to login.
      */
-    document.onkeydown = function (event) {
-        var e = event || window.event || arguments.callee.caller.arguments[0];
-        e.keyCode === 13 && login();
+    document.onkeydown = function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.activeElement === inputElem && login();
+        }
     };
 
-
+    inputElem.focus();
 </script>
-
 
 </body>
 </html>

@@ -6,10 +6,18 @@
     <link rel="stylesheet" th:href="@{/webjars/mdui/dist/css/mdui.css}">
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/mdui/dist/js/mdui.js}"></script>
+    <style>
+        .message-content {
+            font-size: 22px;
+        }
+        .message-content-user {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body class="mdui-theme-primary-indigo mdui-theme-accent-pink">
 
-<div style="margin-left:20px;margin-right:20px">
+<div style="margin-left:20px; margin-right:20px">
     <div class="mdui-toolbar mdui-color-theme">
         <span class="mdui-typo-title">Chat Room</span>
         <div class="mdui-toolbar-spacer"></div>
@@ -38,6 +46,9 @@
                     <div class="mdui-container" style="padding:20px 35px">
                         <!-- TODO: add a send button to send message -->
                         <button class="mdui-btn mdui-color-theme mdui-ripple"
+                                onclick="sendMsgToServer()">Send (Enter)
+                        </button>
+                        <button class="mdui-btn mdui-color-theme mdui-ripple"
                                 onclick="clearMsg()">Clear
                         </button>
                     </div>
@@ -54,10 +65,11 @@
                 <div class="mdui-chip">
                     <span class="mdui-chip-icon mdui-color-blue">
                         <i class="mdui-icon material-icons">face</i></span>
-                    <span class="mdui-chip-title">Online Users</span>
+                    <span class="mdui-chip-title">Online Users: <span class="chat-num"></span></span>
                     <!-- TODO: check online number num -->
                 </div>
                 <!-- TODO: add a message container -->
+                <div class="message-container"></div>
             </div>
 
         </div>
@@ -65,29 +77,34 @@
 </div>
 
 <script th:inline="javascript">
-
     /**
      * WebSocket Client
      *
-     * 1、WebSocket client receive messages with callback. example：webSocket.onmessage
-     * 2、WebSocket client send message to server. example：webSocket.send();
+     * 1、WebSocket client receives messages with callback. example：webSocket.onmessage
+     * 2、WebSocket client sends messages to server. example：webSocket.send();
      */
+
+    var webSocket = getWebSocket();
+    var onlineUsers = {};
+
     function getWebSocket() {
         /**
-         * WebSocket client PS：URL shows WebSocket protocal, port number, and then end point.
+         * WebSocket client PS：URL shows WebSocket protocol, port number, and then end point.
          */
-        var webSocket = new WebSocket(/*[[${webSocketUrl}]]*/ 'ws://localhost:8080/chat');
+        //var webSocket = new WebSocket(/*[[${webSocketUrl}]]*/ 'ws://localhost:3000/chat');
+        var webSocketUrl = 'ws://' + window.location.href.split('://')[1];
+        var webSocket = new WebSocket(webSocketUrl);
         /**
          * websocket open connection.
          */
-        webSocket.onopen = function (event) {
+        webSocket.onopen = function(event) {
             console.log('WebSocket open connection');
         };
 
         /**
          * Server send 1) broadcast message, 2) online users.
          */
-        webSocket.onmessage = function (event) {
+        webSocket.onmessage = function(event) {
             console.log('WebSocket Receives：%c' + event.data, 'color:green');
             //Receive Message from Server
             var message = JSON.parse(event.data) || {};
@@ -96,10 +113,31 @@
                 $messageContainer.append(
                     '<div class="mdui-card" style="margin: 10px 0;">' +
                     '<div class="mdui-card-primary">' +
-                    '<div class="mdui-card-content message-content">' + message.username + "：" + message.msg + '</div>' +
-                    '</div></div>');
+                    '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
+                    message.username + '</span>' + "：" + message.msg + '</div>' + '</div></div>'
+                );
             }
-            $('.chat-num').text(message.onlineCount);
+            else if (message.type === 'CONNECT') {
+                message.connectedUsers.forEach(function(user) {
+                    onlineUsers[user] = true;
+                });
+                $messageContainer.append(
+                    '<div class="mdui-card" style="margin: 10px 0;">' +
+                    '<div class="mdui-card-primary">' +
+                    '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
+                    message.username + '</span>' + ' has joined the room.' + '</div>' + '</div></div>'
+                );
+            }
+            else if (message.type === 'DISCONNECT') {
+                delete onlineUsers[message.username];
+                $messageContainer.append(
+                    '<div class="mdui-card" style="margin: 10px 0;">' +
+                    '<div class="mdui-card-primary">' +
+                    '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
+                    message.username + '</span>' + ' has left the room.' + '</div>' + '</div></div>'
+                );
+            }
+            $('.chat-num').text(Object.keys(onlineUsers).length);
             var $cards = $messageContainer.children('.mdui-card:visible').toArray();
             if ($cards.length > 5) {
                 $cards.forEach(function (item, index) {
@@ -111,21 +149,18 @@
         /**
          * Close connection
          */
-        webSocket.onclose = function (event) {
+        webSocket.onclose = function(event) {
             console.log('WebSocket close connection.');
         };
 
         /**
          * Exception
          */
-        webSocket.onerror = function (event) {
+        webSocket.onerror = function(event) {
             console.log('WebSocket exception.');
         };
         return webSocket;
     }
-
-    var webSocket = getWebSocket();
-
 
     /**
      * Send messages to server use webSocket.
@@ -153,9 +188,9 @@
         e.keyCode === 13 && sendMsgToServer();
     };
 
+    document.getElementById('msg').focus();
+
 </script>
 
 </body>
 </html>
-
-
