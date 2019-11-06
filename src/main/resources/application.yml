@@ -1,6 +1,6 @@
 debug: false
 server:
-  port: 3000
+  port: ${PORT:3000}
 spring:
   thymeleaf:
     cache: false

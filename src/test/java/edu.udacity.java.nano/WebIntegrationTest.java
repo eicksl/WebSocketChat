@@ -26,7 +26,6 @@ public class WebIntegrationTest {
         driver = new FirefoxDriver();
         driver.manage().timeouts().implicitlyWait(2, TimeUnit.SECONDS);
         username = "SeleniumUser";
-        //ROOT_URL = "http://localhost:3000";
     }
 
     @AfterClass

@@ -24,7 +24,7 @@ public class WebSocketChatApplication {
      */
     @GetMapping("/")
     public ModelAndView login() {
-        return new ModelAndView("/login");
+        return new ModelAndView("login");
     }
 
     @GetMapping("/*")
@@ -46,7 +46,7 @@ public class WebSocketChatApplication {
 
     @GetMapping("/chat/{username}")
     public ModelAndView chat(@PathVariable("username") String username) {
-        return new ModelAndView("/chat");
+        return new ModelAndView("chat");
     }
 
 }
