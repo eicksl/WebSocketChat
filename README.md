@@ -1,21 +1,16 @@
-# Chat Room
-Complete the chat room application implementation using WebSocket.
+# Java Spring-Boot WebSocket Chat
+A chat room application implementation using WebSocket.
 
 ## Background
-WebSocket is a communication protocol that makes it possible to establish a two-way communication channel between a
+WebSocket is a communication protocol that makes it possible to establish a persistent two-way communication channel between a
 server and a client.
 
-## Instruction
-### Implement the message model
-Message model is the message payload that will be exchanged between the client and the server. Implement the Message
-class in chat module. Make sure you cover all there basic actions.
-1. ENTER
-2. CHAT
-3. LEAVE
+## Setup
+### Installing GeckoDriver
+You will need to download the appropriate [GeckoDriver binary](https://github.com/mozilla/geckodriver/releases) for your OS and place it in the project's root directory. If the filename has an OS-specific extension such as .exe, you will also need to edit the `GECKO_DRIVER_FILENAME` constant within the `WebIntegrationTest` class.
 
-### Complete WebSocketChatServer
-Implement all TODOs inside WebSocketChatServer follow each method description.
+### Build and run the application
+From the project's root directory, first run `mvn clean install`. This will download dependencies, compile everything, run the Selenium tests, and then package the project. You can then execute the jar with `mvn spring-boot:run` which will start the app.
 
-### Run the application with command
-mvn build; mvn spring-boot:run
-
+### Access the app in the browser
+Use the following URL: http://localhost:3000

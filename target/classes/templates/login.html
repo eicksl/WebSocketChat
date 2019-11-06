@@ -152,9 +152,11 @@
      */
     function login() {
         var username = inputElem.value.trim();
-        if (!username.match(/^[\w\d]+$/)) {
-            document.getElementById('error-msg').innerText = 'Allowed characters: A-Z, a-z, 0-9';
-            return;
+        if (!username) {
+            return document.getElementById('error-msg').innerText = 'Enter a username';
+        }
+        else if (!username.match(/^[\w\d]+$/)) {
+            return document.getElementById('error-msg').innerText = 'Allowed characters: A-Z, a-z, 0-9';
         }
         inputElem.disabled = true;
         $.get('/json/validate/' + username, function(data, status) {
