@@ -7,11 +7,25 @@
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/mdui/dist/js/mdui.js}"></script>
     <style>
+        .container {
+            max-width: 1160px;
+        }
         .message-content {
             font-size: 22px;
         }
         .message-content-user {
             font-weight: bold;
+        }
+        .mdui-toolbar, mdui-color-theme {
+            width: 100%;
+        }
+        .mdui-col-xs-12,
+        .mdui-col-sm-6 {
+            display: block;
+            width: 100%;
+        }
+        .users-container {
+            display: none;
         }
     </style>
 </head>
@@ -19,15 +33,15 @@
 
 <div style="margin-left:20px; margin-right:20px">
     <div class="mdui-toolbar mdui-color-theme">
-        <span class="mdui-typo-title">Chat Room</span>
+        <span class="mdui-typo-title">Spring-Boot WebSocket Chat</span>
         <div class="mdui-toolbar-spacer"></div>
-        <a class="mdui-btn mdui-btn-icon" th:href="@{/}">
+        <a class="mdui-btn mdui-btn-icon" th:href="@{/}" target="_blank">
             <i class="mdui-icon material-icons">exit_to_app</i>
         </a>
     </div>
 </div>
 
-<div style="margin-left:20px;margin-right:20px">
+<div class="container" style="margin-left:20px;margin-right:20px">
     <div class="container_text">
         <div class="mdui-row">
             <div class="mdui-col-xs-12 mdui-col-sm-6">
@@ -44,7 +58,6 @@
                         <input class="mdui-textfield-input" id="msg"/>
                     </div>
                     <div class="mdui-container" style="padding:20px 35px">
-                        <!-- TODO: add a send button to send message -->
                         <button class="mdui-btn mdui-color-theme mdui-ripple"
                                 onclick="sendMsgToServer()">Send (Enter)
                         </button>
@@ -56,23 +69,23 @@
             </div>
 
             <div class="mdui-col-xs-6 mdui-col-sm-5" style="padding:10px 0">
-                <div class="mdui-chip">
+                <div class="mdui-chip" onclick="toggleContentView()">
                     <span class="mdui-chip-icon mdui-color-blue">
                         <i class="mdui-icon material-icons">&#xe420;</i></span>
                     <span class="mdui-chip-title">Content</span>
                 </div>
 
-                <div class="mdui-chip">
+                <div class="mdui-chip" onclick="toggleUsersView()">
                     <span class="mdui-chip-icon mdui-color-blue">
                         <i class="mdui-icon material-icons">face</i></span>
                     <span class="mdui-chip-title">Online Users: <span class="chat-num"></span></span>
-                    <!-- TODO: check online number num -->
                 </div>
-                <!-- TODO: add a message container -->
-                <div class="message-container"></div>
             </div>
-
         </div>
+
+        <div class="message-container"></div>
+        <div class="users-container"></div>
+
     </div>
 </div>
 
@@ -91,7 +104,6 @@
         /**
          * WebSocket client PS：URL shows WebSocket protocol, port number, and then end point.
          */
-        //var webSocket = new WebSocket(/*[[${webSocketUrl}]]*/ 'ws://localhost:3000/chat');
         var webSocketUrl = 'ws://' + window.location.href.split('://')[1];
         var webSocket = new WebSocket(webSocketUrl);
         /**
@@ -109,6 +121,7 @@
             //Receive Message from Server
             var message = JSON.parse(event.data) || {};
             var $messageContainer = $('.message-container');
+            var usersContainer = document.querySelector('.users-container');
             if (message.type === 'SPEAK') {
                 $messageContainer.append(
                     '<div class="mdui-card" style="margin: 10px 0;">' +
@@ -127,6 +140,13 @@
                     '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
                     message.username + '</span>' + ' has joined the room.' + '</div>' + '</div></div>'
                 );
+                usersContainer.innerHTML = (
+                    '<div class="mdui-card" style="margin: 10px 0;">' +
+                    '<div class="mdui-card-primary">' +
+                    '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
+                    Object.keys(onlineUsers).sort().toString().split(',').join(', ') + '</span>' +
+                    '</div>' + '</div></div>'
+                );
             }
             else if (message.type === 'DISCONNECT') {
                 delete onlineUsers[message.username];
@@ -135,6 +155,13 @@
                     '<div class="mdui-card-primary">' +
                     '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
                     message.username + '</span>' + ' has left the room.' + '</div>' + '</div></div>'
+                );
+                usersContainer.innerHTML = (
+                    '<div class="mdui-card" style="margin: 10px 0;">' +
+                    '<div class="mdui-card-primary">' +
+                    '<div class="mdui-card-content message-content">' + '<span class="message-content-user">' +
+                    Object.keys(onlineUsers).sort().toString().split(',').join(', ') + '</span>' +
+                    '</div>' + '</div></div>'
                 );
             }
             $('.chat-num').text(Object.keys(onlineUsers).length);
@@ -170,6 +197,24 @@
         if ($message.val()) {
             webSocket.send(JSON.stringify({username: $('#username').text(), msg: $message.val()}));
             $message.val(null);
+        }
+    }
+
+    function toggleContentView() {
+        var content = document.querySelector('.message-container');
+        var users = document.querySelector('.users-container');
+        if (getComputedStyle(content).display === 'none') {
+            users.style.display = 'none';
+            content.style.display = 'block';
+        }
+    }
+
+    function toggleUsersView() {
+        var users = document.querySelector('.users-container');
+        var content = document.querySelector('.message-container');
+        if (getComputedStyle(users).display === 'none') {
+            content.style.display = 'none';
+            users.style.display = 'block';
         }
     }
 
